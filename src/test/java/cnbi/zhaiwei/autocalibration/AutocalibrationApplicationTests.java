@@ -1,6 +1,6 @@
 package cnbi.zhaiwei.autocalibration;
 
-import cnbi.zhaiwei.autocalibration.service.AutoPaddingService;
+import cnbi.zhaiwei.autocalibration.service.AutoService;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mybatis.spring.annotation.MapperScan;
@@ -13,10 +13,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 @MapperScan(value={"cnbi.zhaiwei.autocalibration.dao"})
 class AutocalibrationApplicationTests {
     @Autowired
-    private AutoPaddingService service;
+    private AutoService service;
 
     @Test
     void contextLoads() {
-        service.batchPaddingCompose("dw_fact");
+        service.autoPaddingSubject("DW_FACTFIXEDBIOLOGICAL");
     }
 }
