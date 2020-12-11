@@ -1,7 +1,6 @@
 package cnbi.zhaiwei.autocalibration.service.impl;
 
 import cnbi.zhaiwei.autocalibration.dao.AutomationMapper;
-import cnbi.zhaiwei.autocalibration.exception.tableAbsentException;
 import cnbi.zhaiwei.autocalibration.pojo.Compose;
 import cnbi.zhaiwei.autocalibration.pojo.Subject;
 import cnbi.zhaiwei.autocalibration.service.AutoService;
@@ -16,22 +15,31 @@ import java.util.*;
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class AutoServiceImpl implements AutoService {
+    private static final String CHINESE_NOTE = "COMMENTS";
+    private static final String MAJOR_KEY = "nid";
+    private static final String COLUMN_NAME = "SUBJECT";
+
     @Autowired
     private AutomationMapper mapper;
 
     @Override
-    public int autoPaddingCompose(String tableName) {
+    public int autoPaddingCompose(String tableName, String updatedTable) {
+        //用于统计添加了多少条记录
         int count = 0;
-        //获取指定表subject字段的值（subject表中指定表的scode值）
+        //获取指定表subject字段的值（subject表中获取指定表的scode值）
         String subjectCode = mapper.querySubjectCode(tableName.toLowerCase());
-        //从DW_COMPOSE表中获取 已经填充进去的值（指定表）
-        List<String> dataList = DBUtils.toLowerCaseElement(mapper.queryComposeTableData(subjectCode));
         //从指定表中获取所有的字段以及它们的中文注释
         List<Map> fieldList = mapper.queryFactTableField(tableName.toUpperCase());
         //把没有中文注释的字段去掉
-        List<Map> filter = DBUtils.filterCollection(fieldList, "COMMENTS");
+        List<Map> filter = DBUtils.filterCollection(fieldList, CHINESE_NOTE);
         //判断是否有主题字段，如果没有则添加
         DBUtils.addifAbsentSubject(filter);
+
+        //把字段名转换成小写
+        List<String> dataList = DBUtils.toLowerCaseElement(
+                //从updatedTable表(这里是DW_COMPOSE表)中获取 已经填充进去的值（指定表）
+                mapper.queryComposeTableData(subjectCode, updatedTable)
+        );
 
         for (Map<String, String> map : filter) {
             String colValue = map.get("COLUMN_NAME").toLowerCase();
@@ -39,19 +47,19 @@ public class AutoServiceImpl implements AutoService {
             String prefix = colValue.substring(0, divideIndex);
             String factField = colValue.substring(divideIndex);
 
-            if(Objects.equals("nid",colValue)||dataList.contains(factField)){
+            if (Objects.equals(MAJOR_KEY, colValue) || dataList.contains(factField)) {
                 continue;
             }
 
             Compose compose = new Compose();
-            factField = discriminateFactField(prefix, factField, compose);
+            factField = DBUtils.discriminateFactField(prefix, factField, compose);
 
             compose.setFactField(factField);
-            compose.setName(map.get("COMMENTS"));
+            compose.setName(map.get(CHINESE_NOTE));
             compose.setSubject(subjectCode);
             compose.setCisCompany("N");
 
-            count += mapper.insertDimensionField(compose);
+            count += mapper.insertDimensionField(compose, updatedTable);
         }
 
         return count;
@@ -59,28 +67,28 @@ public class AutoServiceImpl implements AutoService {
 
     @Override
     public void batchPaddingCompose(String tablePrefix) {
-        List<String> tableList = mapper.queryFactTableName(tablePrefix.toUpperCase() + "%");
-        for (String table : tableList) {
-            if(table.split("_").length > 2){
-                continue;
-            }
-            autoPaddingCompose(table);
-        }
+//        List<String> tableList = mapper.queryFactTableName(tablePrefix.toUpperCase() + "%");
+//        for (String table : tableList) {
+//            if(table.split("_").length > 2){
+//                continue;
+//            }
+//            autoPaddingCompose(table);
+//        }
     }
 
     @Override
-    public List autoCheckComposeData(String tableName) {
+    public List autoCheckComposeData(String tableName, String updatedTable) {
         //获取指定表subject字段的值（subject表中指定表的scode值）
         String subjectCode = mapper.querySubjectCode(tableName.toLowerCase());
-        List<Map> list = mapper.queryFromComposeTable(subjectCode);
+        List<Map> list = mapper.queryFromComposeTable(subjectCode, updatedTable);
         //删除list中所有为null的元素
         list.removeAll(Collections.singleton(null));
 
         List<String> nids = new ArrayList();
-        for(Map map : list){
+        for (Map map : list) {
             String table = map.get("SDIMTABLE").toString();
             String name = mapper.queryTableExist(table);
-            if(!StringUtils.hasText(name)){
+            if (!StringUtils.hasText(name)) {
                 nids.add(map.get("NID").toString());
             }
         }
@@ -88,10 +96,17 @@ public class AutoServiceImpl implements AutoService {
         return nids;
     }
 
+    /**
+     * 向DW_SUBJECT主题表中添加新的数据（每条记录都是一个事实表的相关信息）
+     *
+     * @param tableName 要添加的事实表的表名
+     */
     @Override
     public int autoPaddingSubject(String tableName) {
+        //查询该事实表的中文注释
         String comments = mapper.queryTableComments(tableName);
-        String code = mapper.queryColumnDefault(tableName, "SUBJECT");
+        //查询该事实表的指定字段（此处是subject字段）的默认值
+        String code = mapper.queryColumnDefault(tableName, COLUMN_NAME);
 
         Subject subject = new Subject();
         subject.setCode(code);
@@ -99,41 +114,5 @@ public class AutoServiceImpl implements AutoService {
         subject.setFactTable(tableName.toLowerCase());
 
         return mapper.insertRow2Subject(subject);
-    }
-
-    /**
-     * 根据字段是维度、事实还是主题 来  分情况 给compose对象的属性填充值
-     * @param prefix 字段前缀
-     * @param factField 字段除去前缀后的部分
-     * @param compose  封装dw_compose表中一条记录的字段
-     */
-    private String discriminateFactField(String prefix, String factField, Compose compose){
-        //对维度字段的处理
-        if(Objects.equals(prefix, "dim_")){
-            compose.setDimTable("dw_dim" + factField);
-            compose.setDimField("scode");
-            compose.setType("D");
-        //对度量（事实）字段的处理
-        }else if(Objects.equals(prefix, "fact_")){
-            factField = factField.toUpperCase();
-            compose.setDimTable("");
-            compose.setDimField("");
-            compose.setType("M");
-        //没有前缀时 StringUtils.hasText()如果字符串里面的值为null， ""， "   "，那么返回值为false
-        }else if(!StringUtils.hasText(prefix)){
-            //字段未subject时
-            if(Objects.equals(factField, "subject")){
-                compose.setDimTable("dw_subject");
-                compose.setDimField("scode");
-                compose.setType("S");
-            }else{
-                //这一部分是防止事实字段 没有以“fact_”开头
-                compose.setDimTable("");
-                compose.setDimField("");
-                compose.setType("M");
-            }
-        }
-        //返回处理后的factField
-        return factField;
     }
 }

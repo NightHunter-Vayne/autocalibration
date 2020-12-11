@@ -3,7 +3,7 @@ package cnbi.zhaiwei.autocalibration.pojo;
 import lombok.Data;
 
 @Data
-public class Compose{
+public class Compose {
     //事实表字段
     private String factField;
     //维度表

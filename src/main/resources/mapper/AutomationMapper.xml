@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="cnbi.zhaiwei.autocalibration.dao.AutomationMapper">
     <insert id="insertDimensionField" parameterType="cnbi.zhaiwei.autocalibration.pojo.Compose">
-        insert into dw_compose_zw(SFACTFIELD,SDIMTABLE,SDIMFIELD,SNAME,CTYPE,SUBJECT,CISCOMPANY,NSORT)values(#{compose.factField},
+        insert into ${update}(SFACTFIELD,SDIMTABLE,SDIMFIELD,SNAME,CTYPE,SUBJECT,CISCOMPANY,NSORT)values(#{compose.factField},
         #{compose.dimTable},#{compose.dimField},#{compose.name},#{compose.type},#{compose.subject},#{compose.cisCompany},#{compose.sort})
     </insert>
 
@@ -24,11 +24,11 @@
     </select>
 
     <select id="queryComposeTableData" parameterType="java.lang.String" resultType="java.lang.String">
-        select SFACTFIELD from dw_compose_zw where SUBJECT = #{subject}
+        select SFACTFIELD from ${update} where SUBJECT = #{subject}
     </select>
 
     <select id="queryFromComposeTable" parameterType="java.lang.String" resultType="java.util.Map">
-        select NID,sdimtable from dw_compose_zw where subject = #{subject}
+        select NID,sdimtable from ${update} where subject = #{subject}
     </select>
 
     <select id="queryTableExist" parameterType="java.lang.String" resultType="java.lang.String">

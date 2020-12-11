@@ -1,8 +1,15 @@
 spring:
   datasource:
+    #    呼伦贝尔项目
     url: jdbc:oracle:thin:@192.168.1.106:1521:cnbi
     username: BRDB_1103
     password: cnbi2020
+
+#    山东乖宝项目
+#    url: jdbc:mysql://192.168.2.240:3306/brdb_sdgb_20191021?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+#    username: brdb_sdgb
+#    password: cnbi123
+#    driver-class-name: com.mysql.jdbc.Driver
 
 mybatis:
   mapper-locations:

@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@MapperScan(value={"cnbi.zhaiwei.autocalibration.dao"})
+@MapperScan(value = {"cnbi.zhaiwei.autocalibration.dao"})
 class AutocalibrationApplicationTests {
     @Autowired
     private AutoService service;

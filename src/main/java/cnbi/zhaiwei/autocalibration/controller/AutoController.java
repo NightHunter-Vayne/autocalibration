@@ -17,24 +17,25 @@ import java.util.List;
  * @see cnbi.zhaiwei.autocalibration.controller
  */
 @RestController
-@RequestMapping(value= "/auto", method = RequestMethod.GET)
+@RequestMapping(value = "/auto", method = RequestMethod.GET)
 public class AutoController {
     @Autowired
     private AutoService service;
 
     @GetMapping(value = "/pad_compose")
-    public int autoPaddingCompose(@RequestParam("table") String tableName){
-        return service.autoPaddingCompose(tableName);
+    public int autoPaddingCompose(@RequestParam("table") String tableName, @RequestParam("update") String updatedTable) {
+        return service.autoPaddingCompose(tableName, updatedTable);
     }
 
     @GetMapping(value = "/pad_subject")
-    public int autoPaddingSubject(@RequestParam("table") String tableName){
-        return service.autoPaddingSubject(tableName);
+    public int autoPaddingSubject(@RequestParam("table") String tableName) {
+        //把前端给的表名统一转换成大写的
+        return service.autoPaddingSubject(tableName.toUpperCase());
     }
 
-    @GetMapping(value = "/check_compose")
-    public String autoCheckComposeData(@RequestParam("table") String tableName){
-        List<String> nids = service.autoCheckComposeData(tableName);
-        return nids.toString();
-    }
+//    @GetMapping(value = "/check_compose")
+//    public String autoCheckComposeData(@RequestParam("table") String tableName, @RequestParam("update") String updatedTable){
+//        List<String> nids = service.autoCheckComposeData(tableName, updatedTable);
+//        return nids.toString();
+//    }
 }

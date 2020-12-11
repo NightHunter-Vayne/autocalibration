@@ -11,7 +11,7 @@ package cnbi.zhaiwei.autocalibration.exception;
  * @see cnbi.zhaiwei.autocalibration.exception
  */
 public class tableAbsentException extends Throwable {
-    public tableAbsentException(String table){
+    public tableAbsentException(String table) {
         System.out.println(table + "不存在，请检查后重新手动输入");
     }
 }
