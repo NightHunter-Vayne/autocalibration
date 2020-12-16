@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cnbi.zhaiwei.autocalibration.dao.AutoUpdateMapper">
+    <select id="queryFromComposeTable" parameterType="java.lang.String" resultType="java.util.Map">
+        select NID,SFACTFIELD from ${update} where subject = #{subject}
+    </select>
+
+    <update id="updateComposeTable">
+        update ${update} set SFACTFIELD=#{compose.factField},SDIMTABLE=#{compose.dimTable},SDIMFIELD=
+        #{compose.dimField},SNAME=#{compose.name},CTYPE=#{compose.type},CISCOMPANY=#{compose.C_IS_COMPANY},
+        NSORT=#{compose.SORT} where SFACTFIELD=#{fact} and subject=#{compose.subject}
+    </update>
+</mapper>

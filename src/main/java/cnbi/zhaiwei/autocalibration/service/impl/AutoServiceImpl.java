@@ -1,14 +1,15 @@
 package cnbi.zhaiwei.autocalibration.service.impl;
 
+import cnbi.zhaiwei.autocalibration.dao.AutoUpdateMapper;
 import cnbi.zhaiwei.autocalibration.dao.AutomationMapper;
 import cnbi.zhaiwei.autocalibration.pojo.Compose;
 import cnbi.zhaiwei.autocalibration.pojo.Subject;
 import cnbi.zhaiwei.autocalibration.service.AutoService;
 import cnbi.zhaiwei.autocalibration.util.DBUtils;
+import cnbi.zhaiwei.autocalibration.util.FieldTransformUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -18,9 +19,14 @@ public class AutoServiceImpl implements AutoService {
     private static final String CHINESE_NOTE = "COMMENTS";
     private static final String MAJOR_KEY = "nid";
     private static final String COLUMN_NAME = "SUBJECT";
+    private static final String SEPARATION_CHARACTAR = "_";
+    private static final String DIMENSION_PREFIX = "dw_dim";
+    private static final String SUBJECT_PREFIX = "dw_";
 
     @Autowired
     private AutomationMapper mapper;
+    @Autowired
+    private AutoUpdateMapper updateMapper;
 
     @Override
     public int autoPaddingCompose(String tableName, String updatedTable) {
@@ -28,12 +34,17 @@ public class AutoServiceImpl implements AutoService {
         int count = 0;
         //获取指定表subject字段的值（subject表中获取指定表的scode值）
         String subjectCode = mapper.querySubjectCode(tableName.toLowerCase());
+
+        /*
+         * 以下3行用于从原事实表中获取字段信息
+         */
         //从指定表中获取所有的字段以及它们的中文注释
         List<Map> fieldList = mapper.queryFactTableField(tableName.toUpperCase());
         //把没有中文注释的字段去掉
         List<Map> filter = DBUtils.filterCollection(fieldList, CHINESE_NOTE);
         //判断是否有主题字段，如果没有则添加
         DBUtils.addifAbsentSubject(filter);
+
 
         //把字段名转换成小写
         List<String> dataList = DBUtils.toLowerCaseElement(
@@ -43,21 +54,15 @@ public class AutoServiceImpl implements AutoService {
 
         for (Map<String, String> map : filter) {
             String colValue = map.get("COLUMN_NAME").toLowerCase();
-            int divideIndex = colValue.indexOf("_") + 1;
-            String prefix = colValue.substring(0, divideIndex);
-            String factField = colValue.substring(divideIndex);
+            String simplyField = FieldTransformUtil.getSimpleField(colValue, SEPARATION_CHARACTAR);
 
-            if (Objects.equals(MAJOR_KEY, colValue) || dataList.contains(factField)) {
+            if (Objects.equals(MAJOR_KEY, colValue) || dataList.contains(simplyField)) {
                 continue;
             }
 
             Compose compose = new Compose();
-            factField = DBUtils.discriminateFactField(prefix, factField, compose);
-
-            compose.setFactField(factField);
-            compose.setName(map.get(CHINESE_NOTE));
-            compose.setSubject(subjectCode);
-            compose.setCisCompany("N");
+            FieldTransformUtil.paddingVarietyField(colValue, compose);
+            FieldTransformUtil.paddingInvariantField(map.get(CHINESE_NOTE), subjectCode, compose);
 
             count += mapper.insertDimensionField(compose, updatedTable);
         }
@@ -66,34 +71,57 @@ public class AutoServiceImpl implements AutoService {
     }
 
     @Override
-    public void batchPaddingCompose(String tablePrefix) {
-//        List<String> tableList = mapper.queryFactTableName(tablePrefix.toUpperCase() + "%");
-//        for (String table : tableList) {
-//            if(table.split("_").length > 2){
-//                continue;
-//            }
-//            autoPaddingCompose(table);
-//        }
-    }
+    public int autoUpdateComposeData(String tableName, String updatedTable) {
+        //用于统计跟新了多少条记录
+        int count = 0;
+        /*
+         * 以下3行用于从原事实表中获取字段信息
+         */
+        //从指定表中获取所有的字段以及它们的中文注释
+        List<Map> fieldList = mapper.queryFactTableField(tableName.toUpperCase());
+        //把没有中文注释的字段去掉
+        List<Map> filter = DBUtils.filterCollection(fieldList, CHINESE_NOTE);
+        //判断是否有主题字段，如果没有则添加
+        DBUtils.addifAbsentSubject(filter);
 
-    @Override
-    public List autoCheckComposeData(String tableName, String updatedTable) {
+
         //获取指定表subject字段的值（subject表中指定表的scode值）
         String subjectCode = mapper.querySubjectCode(tableName.toLowerCase());
-        List<Map> list = mapper.queryFromComposeTable(subjectCode, updatedTable);
+        //从dw_compose表中查询 SFACTFIELD,SDIMTABLE,SDIMFIELD,SNAME,CTYPE,SUBJECT 的值
+        List<Map> list = updateMapper.queryFromComposeTable(subjectCode, updatedTable);
         //删除list中所有为null的元素
-        list.removeAll(Collections.singleton(null));
+//        list.removeAll(Collections.singleton(null));
 
-        List<String> nids = new ArrayList();
-        for (Map map : list) {
-            String table = map.get("SDIMTABLE").toString();
-            String name = mapper.queryTableExist(table);
-            if (!StringUtils.hasText(name)) {
-                nids.add(map.get("NID").toString());
+        Compose compose = new Compose();
+        for(Map field : fieldList){
+            String simpleField = "";
+            String fieldName = field.get("COLUMN_NAME").toString();
+            String comment = field.get("COMMENTS").toString();
+
+            /**
+             * 根据事实表中的字段名和汉语注释来填充Compose对象
+             */
+            FieldTransformUtil.paddingVarietyField(fieldName, compose);
+            FieldTransformUtil.paddingInvariantField(comment, subjectCode, compose);
+
+            if(Objects.equals(fieldName.toLowerCase(), "subject")){
+                simpleField = fieldName;
+            }else{
+                simpleField = FieldTransformUtil.getSimpleField(fieldName, SEPARATION_CHARACTAR);
             }
+
+            String factField = "";
+            for(Map map : list){
+                if(Objects.equals(map.get("SFACTFIELD").toString().toLowerCase(), simpleField.toLowerCase())){
+                    factField = map.get("SFACTFIELD").toString();
+                }
+            }
+
+            updateMapper.updateComposeTable(updatedTable, factField, compose);
+            count++;
         }
 
-        return nids;
+        return count;
     }
 
     /**

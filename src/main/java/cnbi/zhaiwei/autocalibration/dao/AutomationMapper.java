@@ -58,15 +58,6 @@ public interface AutomationMapper {
      */
     List<String> queryComposeTableData(@Param("subject") String subjectCode, @Param("update") String updatedTable);
 
-    /**
-     * 根据指定的subject值在dw_compose_zw表中查出所有数据
-     *
-     * @param subjectCode
-     * @return 返回dimtable组成的List集合
-     * @author cnbi 翟伟
-     * @date 2020/11/20
-     */
-    List<Map> queryFromComposeTable(@Param("subject") String subjectCode, @Param("update") String updatedTable);
 
     /**
      * 判断一个表是否存在

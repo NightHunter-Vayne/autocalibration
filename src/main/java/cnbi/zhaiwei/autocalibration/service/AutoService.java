@@ -24,14 +24,14 @@ public interface AutoService {
      * @author cnbi 翟伟
      * @date 2020/11/19
      */
-    void batchPaddingCompose(String tablePrefix);
+//    void batchPaddingCompose(String tablePrefix);
 
     /**
      * @param tableName
      * @author cnbi 翟伟
      * @date 2020/11/20
      */
-    List autoCheckComposeData(String tableName, String updatedTable);
+    int autoUpdateComposeData(String tableName, String updatedTable);
 
     /**
      * 向DW_SUBJECT表中添加新的数据

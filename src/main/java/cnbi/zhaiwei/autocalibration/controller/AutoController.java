@@ -33,9 +33,8 @@ public class AutoController {
         return service.autoPaddingSubject(tableName.toUpperCase());
     }
 
-//    @GetMapping(value = "/check_compose")
-//    public String autoCheckComposeData(@RequestParam("table") String tableName, @RequestParam("update") String updatedTable){
-//        List<String> nids = service.autoCheckComposeData(tableName, updatedTable);
-//        return nids.toString();
-//    }
+    @GetMapping(value = "/check_compose")
+    public int autoCheckComposeData(@RequestParam("table") String tableName, @RequestParam("update") String updatedTable){
+        return service.autoUpdateComposeData(tableName, updatedTable);
+    }
 }

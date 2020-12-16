@@ -4,13 +4,13 @@
 <mapper namespace="cnbi.zhaiwei.autocalibration.dao.AutomationMapper">
     <insert id="insertDimensionField" parameterType="cnbi.zhaiwei.autocalibration.pojo.Compose">
         insert into ${update}(SFACTFIELD,SDIMTABLE,SDIMFIELD,SNAME,CTYPE,SUBJECT,CISCOMPANY,NSORT)values(#{compose.factField},
-        #{compose.dimTable},#{compose.dimField},#{compose.name},#{compose.type},#{compose.subject},#{compose.cisCompany},#{compose.sort})
+        #{compose.dimTable},#{compose.dimField},#{compose.name},#{compose.type},#{compose.subject},#{compose.C_IS_COMPANY},#{compose.SORT})
     </insert>
 
     <select id="queryFactTableField" parameterType="java.lang.String" resultType="java.util.Map">
-        SELECT b.COLUMN_NAME,c.COMMENTS FROM user_tables a left join user_tab_columns b on a.TABLE_NAME=b.TABLE_NAME
-        left join user_col_comments c on a.TABLE_NAME=c.TABLE_NAME and b.COLUMN_NAME=c.COLUMN_NAME and  c.COMMENTS is not null
-        WHERE  a.TABLE_NAME = #{table}
+        SELECT b.COLUMN_NAME,c.COMMENTS FROM user_tables a left join user_tab_columns b on
+        a.TABLE_NAME=b.TABLE_NAME left join user_col_comments c on a.TABLE_NAME=c.TABLE_NAME
+        and b.COLUMN_NAME=c.COLUMN_NAME WHERE a.TABLE_NAME=#{table} and c.COMMENTS is not null
     </select>
 
     <select id="queryFactTableName" resultType="java.lang.String" parameterType="java.lang.String">
@@ -25,10 +25,6 @@
 
     <select id="queryComposeTableData" parameterType="java.lang.String" resultType="java.lang.String">
         select SFACTFIELD from ${update} where SUBJECT = #{subject}
-    </select>
-
-    <select id="queryFromComposeTable" parameterType="java.lang.String" resultType="java.util.Map">
-        select NID,sdimtable from ${update} where subject = #{subject}
     </select>
 
     <select id="queryTableExist" parameterType="java.lang.String" resultType="java.lang.String">

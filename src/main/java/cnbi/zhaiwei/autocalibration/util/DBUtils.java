@@ -71,42 +71,4 @@ public class DBUtils {
             map.put("COMMENTS", "主题");
         }
     }
-
-
-    /**
-     * 根据字段是维度、事实还是主题 来  分情况 给compose对象的属性填充值
-     *
-     * @param prefix    字段前缀
-     * @param factField 字段除去前缀后的部分
-     * @param compose   封装dw_compose表中一条记录的字段
-     */
-    public static String discriminateFactField(String prefix, String factField, Compose compose) {
-        //对维度字段的处理
-        if (Objects.equals(prefix, "dim_")) {
-            compose.setDimTable("dw_dim" + factField);
-            compose.setDimField("scode");
-            compose.setType("D");
-            //对度量（事实）字段的处理
-        } else if (Objects.equals(prefix, "fact_")) {
-            factField = factField.toUpperCase();
-            compose.setDimTable("");
-            compose.setDimField("");
-            compose.setType("M");
-            //没有前缀时 StringUtils.hasText()如果字符串里面的值为null， ""， "   "，那么返回值为false
-        } else if (!StringUtils.hasText(prefix)) {
-            //字段未subject时
-            if (Objects.equals(factField, "subject")) {
-                compose.setDimTable("dw_subject");
-                compose.setDimField("scode");
-                compose.setType("S");
-            } else {
-                //这一部分是防止事实字段 没有以“fact_”开头
-                compose.setDimTable("");
-                compose.setDimField("");
-                compose.setType("M");
-            }
-        }
-        //返回处理后的factField
-        return factField;
-    }
 }

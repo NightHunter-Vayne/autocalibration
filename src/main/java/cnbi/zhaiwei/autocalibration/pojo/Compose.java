@@ -17,7 +17,7 @@ public class Compose {
     //主题编码
     private String subject;
     //已弃用
-    private String cisCompany;
+    private final String C_IS_COMPANY = "N";
     //排序
-    private final int sort = 0;
+    private final int SORT = 0;
 }
