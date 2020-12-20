@@ -39,4 +39,11 @@ public interface AutoService {
      * @param tableName
      */
     int autoPaddingSubject(String tableName);
+
+    /**
+     * 把指定表的指定字段类型改成NVARCHAR2类型
+     * @param table 指定表
+     * @return
+     */
+    Integer transformFieldType(String table);
 }

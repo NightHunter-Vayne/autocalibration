@@ -37,4 +37,14 @@ public class AutoController {
     public int autoCheckComposeData(@RequestParam("table") String tableName, @RequestParam("update") String updatedTable){
         return service.autoUpdateComposeData(tableName, updatedTable);
     }
+
+    /**
+     * 把指定表的指定字段类型改成NVARCHAR2类型
+     * @param table 指定的表
+     * @return
+     */
+    @GetMapping(value = "/tran_field_type")
+    public Integer transformFieldType(String table){
+        return service.transformFieldType(table);
+    }
 }

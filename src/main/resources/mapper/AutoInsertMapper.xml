@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="cnbi.zhaiwei.autocalibration.dao.AutomationMapper">
+<mapper namespace="cnbi.zhaiwei.autocalibration.dao.AutoInsertMapper">
     <insert id="insertDimensionField" parameterType="cnbi.zhaiwei.autocalibration.pojo.Compose">
         insert into ${update}(SFACTFIELD,SDIMTABLE,SDIMFIELD,SNAME,CTYPE,SUBJECT,CISCOMPANY,NSORT)values(#{compose.factField},
         #{compose.dimTable},#{compose.dimField},#{compose.name},#{compose.type},#{compose.subject},#{compose.C_IS_COMPANY},#{compose.SORT})
@@ -13,11 +13,11 @@
         and b.COLUMN_NAME=c.COLUMN_NAME WHERE a.TABLE_NAME=#{table} and c.COMMENTS is not null
     </select>
 
-    <select id="queryFactTableName" resultType="java.lang.String" parameterType="java.lang.String">
-        select distinct a.TABLE_NAME from user_tables a left join user_tab_columns b on a.TABLE_NAME=b.TABLE_NAME
-        left join user_col_comments c on a.TABLE_NAME=c.TABLE_NAME and b.COLUMN_NAME=c.COLUMN_NAME
-        and c.COMMENTS is not null where a.TABLE_NAME like #{tablename}
-    </select>
+<!--    <select id="queryFactTableName" resultType="java.lang.String" parameterType="java.lang.String">-->
+<!--        select distinct a.TABLE_NAME from user_tables a left join user_tab_columns b on a.TABLE_NAME=b.TABLE_NAME-->
+<!--        left join user_col_comments c on a.TABLE_NAME=c.TABLE_NAME and b.COLUMN_NAME=c.COLUMN_NAME-->
+<!--        and c.COMMENTS is not null where a.TABLE_NAME like #{tablename}-->
+<!--    </select>-->
 
     <select id="querySubjectCode" parameterType="java.lang.String" resultType="java.lang.String">
         select scode from dw_subject where SFACTTABLE = #{table}
@@ -31,17 +31,4 @@
         select table_name from user_tables t where table_name= upper(#{table})
     </select>
 
-    <select id="queryTableComments" parameterType="java.lang.String" resultType="java.lang.String">
-        select COMMENTS from user_tab_comments where table_name = #{table}
-    </select>
-
-    <select id="queryColumnDefault" parameterType="java.lang.String" resultType="java.lang.String">
-        SELECT DATA_DEFAULT FROM USER_TAB_COLUMNS WHERE TABLE_NAME = #{table} AND COLUMN_NAME = #{column}
-    </select>
-
-    <insert id="insertRow2Subject" parameterType="cnbi.zhaiwei.autocalibration.pojo.Subject">
-        insert into DW_SUBJECT(SCODE,SNAME,CSPLIT,SPREFIXDIM,SPREFIXFACT,SFACTTABLE,NCOMPANYINDEX,NPERIODINDEX,CSHOWTYPE)
-        values(${subject.code},#{subject.name},#{subject.split},#{subject.prefixDim},#{subject.prefixFact},#{subject.factTable},
-        #{subject.company},#{subject.period},#{subject.showType})
-    </insert>
 </mapper>

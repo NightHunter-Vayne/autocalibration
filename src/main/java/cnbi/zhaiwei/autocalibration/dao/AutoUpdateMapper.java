@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 写用于修正数据的表
+ * 用于修正dw_compose表的数据
  *
  * @author cnbi 翟伟
  * @version 1.0
